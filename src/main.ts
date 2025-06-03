@@ -9,7 +9,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization',
   });
-  app.setGlobalPrefix('api'); // Set global prefix for all routes
+  app.setGlobalPrefix(process.env.TOP_LEVEL_PREFIX || 'api'); // Set global prefix for all routes
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true, // Automatically transform payloads to DTO instances
