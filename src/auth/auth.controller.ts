@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   HttpCode,
   HttpException,
@@ -14,6 +15,8 @@ import {
   LoginResponse,
   RegisterDto,
   RegisterResponse,
+  User,
+  UserWithoutPassword,
   ValidateDto,
   ValidateResponse,
 } from './auth.model';
@@ -24,6 +27,32 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
   ) {}
+
+  @Get('me')
+  @HttpCode(200)
+  async getMe(@Headers('authorization') authorization: string): Promise<UserWithoutPassword> {
+    try {
+      const token = authorization.replace('Bearer ', '');
+      const payload = await this.jwtService.verifyAsync(token);
+      if (!payload || !payload.sub || payload.type !== 'access') {
+        throw new Errors(401, ['Invalid token']);
+      }
+      const user = await this.authService.getUserById(payload.sub);
+      if (!user) {
+        throw new Errors(404, ['User not found']);
+      }
+      return UserWithoutPassword.from(user);
+    } catch (error) {
+      if (error instanceof Errors) {
+        throw new HttpException(error, error.status || 500);
+      } else {
+        throw new HttpException(
+          { status: 500, message: 'Internal Server Error' },
+          500,
+        );
+      }
+    }
+  }
 
   @Post('login')
   @HttpCode(200)
@@ -143,7 +172,7 @@ export class AuthController {
     try {
       const token = validateRequest.authorization.replace('Bearer ', '');
       const payload = await this.jwtService.verifyAsync(token);
-      if (!payload || !payload.sub) {
+      if (!payload || !payload.sub || payload.type !== 'access') {
         throw new Errors(401, ['Invalid token']);
       }
       const user = await this.authService.getUserById(payload.sub);

@@ -49,6 +49,17 @@ export interface ValidateResponse {
   message: string;
 }
 
+export class UserWithoutPassword {
+  id: string;
+  username: string;
+  public static from(user: User): UserWithoutPassword {
+    return {
+      id: user.id ?? '',
+      username: user.username,
+    };
+  }
+}
+
 export class Errors extends Error {
   constructor(
     public status: number,
