@@ -21,7 +21,7 @@ import {
   ValidateResponse,
 } from './auth.model';
 
-@Controller('auth')
+@Controller()
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
