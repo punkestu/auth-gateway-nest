@@ -3,7 +3,7 @@ import { Errors, User } from '../auth.model';
 import { MySQLPool } from 'utils/mysql_pool';
 import { RowDataPacket } from 'mysql2';
 import mysql from 'mysql2/promise';
-import { hash, compare } from '@uswriting/bcrypt';
+import { hash, compare } from 'bcrypt';
 
 class UserDB implements RowDataPacket {
   ['constructor']: { name: 'RowDataPacket' };
@@ -38,7 +38,7 @@ export class RepositoryMysql {
   }
   create(user: User): Promise<User> {
     return this.mysqlPoll.getConnection().then(async (conn) => {
-      const hashedPassword = hash(user.password, 10);
+      const hashedPassword = await hash(user.password, 10);
       const [result] = await conn.execute<mysql.ResultSetHeader>(
         'INSERT INTO users (username, password) VALUES (?, ?)',
         [user.username, hashedPassword],
@@ -91,6 +91,6 @@ export class RepositoryMysql {
     });
   }
   comparePassword(password: string, user: User): Promise<boolean> {
-    return Promise.resolve(compare(password, user.password));
+    return compare(password, user.password);
   }
 }
