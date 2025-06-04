@@ -13,13 +13,14 @@ import {
   Errors,
   LoginDto,
   LoginResponse,
+  RefreshDto,
+  RefreshResponse,
   RegisterDto,
   RegisterResponse,
-  User,
   UserWithoutPassword,
-  ValidateDto,
   ValidateResponse,
 } from './auth.model';
+import { ApiResponse } from '@nestjs/swagger';
 
 @Controller()
 export class AuthController {
@@ -30,7 +31,14 @@ export class AuthController {
 
   @Get('me')
   @HttpCode(200)
-  async getMe(@Headers('authorization') authorization: string): Promise<UserWithoutPassword> {
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the authenticated user without password',
+    type: UserWithoutPassword,
+  })
+  async getMe(
+    @Headers('authorization') authorization: string,
+  ): Promise<UserWithoutPassword> {
     try {
       const token = authorization.replace('Bearer ', '');
       const payload = await this.jwtService.verifyAsync(token);
@@ -56,6 +64,11 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    description: 'Returns access and refresh tokens',
+    type: LoginResponse,
+  })
   async login(@Body() loginRequest: LoginDto): Promise<LoginResponse> {
     try {
       const user = await this.authService.login(
@@ -94,6 +107,11 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(201)
+  @ApiResponse({
+    status: 201,
+    description: 'Returns a success message upon successful registration',
+    type: RegisterResponse,
+  })
   async register(
     @Body() registerRequest: RegisterDto,
   ): Promise<RegisterResponse> {
@@ -121,9 +139,14 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    description: 'Returns new access and refresh tokens',
+    type: RefreshResponse,
+  })
   async refreshToken(
-    @Body() refreshRequest: { refreshToken: string },
-  ): Promise<LoginResponse> {
+    @Body() refreshRequest: RefreshDto,
+  ): Promise<RefreshResponse> {
     try {
       const payload = await this.jwtService.verifyAsync(
         refreshRequest.refreshToken,
@@ -166,11 +189,16 @@ export class AuthController {
 
   @Post('validate')
   @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    description: 'Validates the access token and returns user information',
+    type: ValidateResponse,
+  })
   async validateToken(
-    @Headers() validateRequest: ValidateDto,
+    @Headers('authorization') authorization: string,
   ): Promise<ValidateResponse> {
     try {
-      const token = validateRequest.authorization.replace('Bearer ', '');
+      const token = authorization.replace('Bearer ', '');
       const payload = await this.jwtService.verifyAsync(token);
       if (!payload || !payload.sub || payload.type !== 'access') {
         throw new Errors(401, ['Invalid token']);

@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ConsoleLogger, ValidationPipe } from '@nestjs/common';
 import { AuthModule } from './auth.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AuthModule, {
@@ -8,6 +9,15 @@ async function bootstrap() {
       json: true,
     }),
   });
+  const config = new DocumentBuilder()
+    .setTitle('Auth Gateway API')
+    .setDescription('Free API for authentication')
+    .setVersion('1.0')
+    .build();
+
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup((process.env.TOP_LEVEL_PREFIX || '') + '/documentation', app, documentFactory);
+
   app.enableCors({
     origin: '*', // Allow all origins
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',

@@ -1,3 +1,4 @@
+import { ApiProperty, ApiResponse, ApiResponseProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 
 export class User {
@@ -8,49 +9,100 @@ export class User {
 
 export class LoginDto {
   @IsString()
+  @ApiProperty({
+    description: 'Username for login',
+    example: 'john_doe',
+  })
   username: string;
   @IsString()
+  @ApiProperty({
+    description: 'Password for login',
+    example: 'securepassword123',
+  })
   password: string;
 }
 
 export class RegisterDto {
   @IsString()
+  @ApiProperty({
+    description: 'Username for registration',
+    example: 'jane_doe',
+  })
   username: string;
   @IsString()
+  @ApiProperty({
+    description: 'Password for registration',
+    example: 'securepassword123',
+  })
   password: string;
 }
 
 export class RefreshDto {
   @IsString()
+  @ApiProperty({
+    description: 'Authorization token for refreshing session',
+    example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
   refreshToken: string;
 }
 
-export class ValidateDto {
-  @IsString()
-  authorization: string;
-}
-
-export interface LoginResponse {
+export class LoginResponse {
+  @ApiResponseProperty({
+    type: String,
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
   accessToken: string;
+  @ApiResponseProperty({
+    type: String,
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
   refreshToken?: string;
 }
 
-export interface RegisterResponse {
+export class RegisterResponse {
+  @ApiResponseProperty({
+    type: String,
+    example: 'User registered successfully',
+  })
   message: string;
 }
 
-export interface RefreshResponse {
+export class RefreshResponse {
+  @ApiResponseProperty({
+    type: String,
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
   accessToken: string;
+  @ApiResponseProperty({
+    type: String,
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
   refreshToken?: string;
 }
 
-export interface ValidateResponse {
+export class ValidateResponse {
+  @ApiResponseProperty({
+    type: Boolean,
+    example: true,
+  })
   valid: boolean;
+  @ApiResponseProperty({
+    type: String,
+    example: 'User is valid',
+  })
   message: string;
 }
 
 export class UserWithoutPassword {
+  @ApiResponseProperty({
+    type: String,
+    example: '12345',
+  })
   id: string;
+  @ApiResponseProperty({
+    type: String,
+    example: 'john_doe',
+  })
   username: string;
   public static from(user: User): UserWithoutPassword {
     return {
