@@ -5,11 +5,16 @@ import {
   Headers,
   HttpCode,
   HttpException,
+  Patch,
   Post,
+  Put,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import {
+  ChangePasswordDto,
   Errors,
   LoginDto,
   LoginResponse,
@@ -20,7 +25,8 @@ import {
   UserWithoutPassword,
   ValidateResponse,
 } from './auth.model';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { JwtAuthGuard } from './auth.guard';
 
 @Controller()
 export class AuthController {
@@ -31,21 +37,19 @@ export class AuthController {
 
   @Get('me')
   @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
     description: 'Returns the authenticated user without password',
     type: UserWithoutPassword,
   })
-  async getMe(
-    @Headers('authorization') authorization: string,
-  ): Promise<UserWithoutPassword> {
+  async getMe(@Req() req): Promise<UserWithoutPassword> {
     try {
-      const token = authorization.replace('Bearer ', '');
-      const payload = await this.jwtService.verifyAsync(token);
-      if (!payload || !payload.sub || payload.type !== 'access') {
+      if (!req.user || !req.user.sub || req.user.type !== 'access') {
         throw new Errors(401, ['Invalid token']);
       }
-      const user = await this.authService.getUserById(payload.sub);
+      const user = await this.authService.getUserById(req.user.sub);
       if (!user) {
         throw new Errors(404, ['User not found']);
       }
@@ -117,6 +121,7 @@ export class AuthController {
   ): Promise<RegisterResponse> {
     try {
       const message = await this.authService.register(
+        registerRequest.email,
         registerRequest.username,
         registerRequest.password,
       );
@@ -137,6 +142,37 @@ export class AuthController {
     }
   }
 
+  @Patch('change-password')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({
+    status: 200,
+    description: 'Returns a success message upon successful password change',
+  })
+  async changePassword(
+    @Req() req,
+    @Body() body: ChangePasswordDto,
+  ): Promise<string> {
+    try {
+      if (!req.user || !req.user.sub || req.user.type !== 'access') {
+        throw new Errors(401, ['Invalid token']);
+      }
+      const userId = req.user.sub;
+      await this.authService.changePassword(userId, body.newPassword);
+      return `Password for user ID ${userId} changed successfully`;
+    } catch (error) {
+      if (error instanceof Errors) {
+        throw new HttpException(error, error.status || 500);
+      } else {
+        throw new HttpException(
+          { status: 500, message: 'Internal Server Error: ' + error.message },
+          500,
+        );
+      }
+    }
+  }
+
   @Post('refresh')
   @HttpCode(200)
   @ApiResponse({
@@ -148,9 +184,11 @@ export class AuthController {
     @Body() refreshRequest: RefreshDto,
   ): Promise<RefreshResponse> {
     try {
-      const payload = await this.jwtService.verifyAsync(
-        refreshRequest.refreshToken,
-      );
+      const payload = await this.jwtService
+        .verifyAsync(refreshRequest.refreshToken)
+        .catch(() => {
+          throw new Errors(401, ['Invalid refresh token']);
+        });
       if (!payload || !payload.sub || payload.type !== 'refresh') {
         throw new Errors(401, ['Invalid refresh token']);
       }
@@ -180,7 +218,7 @@ export class AuthController {
         throw new HttpException(error, error.status || 500);
       } else {
         throw new HttpException(
-          { status: 500, message: 'Invalid refresh token' },
+          { status: 500, message: 'Internal Server Error: ' + error.message },
           401,
         );
       }
@@ -189,21 +227,19 @@ export class AuthController {
 
   @Post('validate')
   @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
     description: 'Validates the access token and returns user information',
     type: ValidateResponse,
   })
-  async validateToken(
-    @Headers('authorization') authorization: string,
-  ): Promise<ValidateResponse> {
+  async validateToken(@Req() req): Promise<ValidateResponse> {
     try {
-      const token = authorization.replace('Bearer ', '');
-      const payload = await this.jwtService.verifyAsync(token);
-      if (!payload || !payload.sub || payload.type !== 'access') {
+      if (!req.user || !req.user.sub || req.user.type !== 'access') {
         throw new Errors(401, ['Invalid token']);
       }
-      const user = await this.authService.getUserById(payload.sub);
+      const user = await this.authService.getUserById(req.user.sub);
       if (!user) {
         throw new Errors(404, ['User not found']);
       }

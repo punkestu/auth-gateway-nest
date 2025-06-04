@@ -3,8 +3,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { RepositoryMysql } from './repository/repository.mysql';
 import { REPOSITORY } from './repository/repository.interface';
-import { RepositoryMock } from './repository/repository.mock';
 import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './auth.strategy';
 
 @Module({
   imports: [
@@ -21,6 +21,7 @@ import { JwtModule } from '@nestjs/jwt';
       provide: REPOSITORY,
       useClass: RepositoryMysql,
     },
+    JwtStrategy
   ],
 })
 export class AuthModule {}

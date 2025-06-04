@@ -5,7 +5,12 @@ import { User } from '../auth.model';
 @Injectable()
 export class RepositoryMock implements IRepository {
   getByUsername(username: string): Promise<User> {
-    return Promise.resolve({ id: '1', username, password: 'mockPassword' });
+    return Promise.resolve({
+      id: '1',
+      email: 'mock@mail.com',
+      username,
+      password: 'mockPassword',
+    });
   }
   create(user: User): Promise<User> {
     return Promise.resolve({ ...user, id: 'mockId' });
@@ -13,12 +18,16 @@ export class RepositoryMock implements IRepository {
   update(user: User): Promise<User> {
     return Promise.resolve({ ...user, password: 'updatedMockPassword' });
   }
+  changePassword(userId: string, newPassword: string): Promise<void> {
+    return Promise.resolve();
+  }
   delete(userId: string): Promise<void> {
     return Promise.resolve();
   }
   getById(userId: string): Promise<User> {
     return Promise.resolve({
       id: userId,
+      email: 'mock@mail.com',
       username: 'mockUser',
       password: 'mockPassword',
     });
@@ -30,6 +39,7 @@ export class RepositoryMock implements IRepository {
     const username = token.split(':')[1];
     return Promise.resolve({
       id: 'mockId',
+      email: 'mock@mail.com',
       username,
       password: 'mockPassword',
     });

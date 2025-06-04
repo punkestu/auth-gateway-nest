@@ -22,7 +22,7 @@ export class AuthService {
     });
   }
 
-  register(username: string, password: string): Promise<string> {
+  register(email: string, username: string, password: string): Promise<string> {
     return this.repository
       .getByUsername(username)
       .then((existingUser) => {
@@ -30,7 +30,7 @@ export class AuthService {
           throw new Errors(400, ['Username already exists']);
         }
       })
-      .then(() => this.repository.create({ username, password }))
+      .then(() => this.repository.create({ email, username, password }))
       .then((user) => {
         return `User ${user.username} registered successfully`;
       });
@@ -44,6 +44,20 @@ export class AuthService {
     return this.repository.update(user).then((updatedUser) => {
       return `User ${updatedUser.username} updated successfully`;
     });
+  }
+
+  changePassword(userId: string, newPassword: string): Promise<string> {
+    return this.repository
+      .getById(userId)
+      .then((user) => {
+        if (!user) {
+          throw new Errors(404, ['User not found']);
+        }
+        return this.repository.changePassword(userId, newPassword);
+      })
+      .then(() => {
+        return `Password for user ID ${userId} changed successfully`;
+      });
   }
 
   deleteUser(userId: string): Promise<string> {

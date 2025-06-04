@@ -21,7 +21,19 @@ async function runMigrations() {
     logger: console,
   });
 
-  await umzug.up();
+  const isUp = process.argv.includes('--up');
+  const isDown = process.argv.includes('--down');
+
+  if (isUp && isDown) {
+    throw new Error('Cannot specify both --up and --down options');
+  }
+
+  if (isDown) {
+    await umzug.down();
+  } else {
+    await umzug.up();
+  }
+  
   await connection.end();
 }
 

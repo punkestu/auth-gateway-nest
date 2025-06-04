@@ -13,6 +13,7 @@ async function bootstrap() {
     .setTitle('Auth Gateway API')
     .setDescription('Free API for authentication')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

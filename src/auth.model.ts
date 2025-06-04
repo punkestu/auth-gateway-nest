@@ -3,6 +3,7 @@ import { IsString } from 'class-validator';
 
 export class User {
   id?: string;
+  email: string;
   username: string;
   password: string;
 }
@@ -25,6 +26,12 @@ export class LoginDto {
 export class RegisterDto {
   @IsString()
   @ApiProperty({
+    description: 'Email for registration',
+    example: 'janedoe@mail.com',
+  })
+  email: string;
+  @IsString()
+  @ApiProperty({
     description: 'Username for registration',
     example: 'jane_doe',
   })
@@ -35,6 +42,15 @@ export class RegisterDto {
     example: 'securepassword123',
   })
   password: string;
+}
+
+export class ChangePasswordDto {
+  @IsString()
+  @ApiProperty({
+    description: 'New password for the user',
+    example: 'newsecurepassword456',
+  })
+  newPassword: string;
 }
 
 export class RefreshDto {
