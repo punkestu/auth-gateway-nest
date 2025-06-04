@@ -5,6 +5,7 @@ import { RepositoryMysql } from './repository/repository.mysql';
 import { REPOSITORY } from './repository/repository.interface';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './auth.strategy';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { JwtStrategy } from './auth.strategy';
       secret: process.env.JWT_SECRET || "secret",
       signOptions: { expiresIn: '1h' },
     }),
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [

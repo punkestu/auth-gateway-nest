@@ -30,12 +30,15 @@ import {
 } from './auth.model';
 import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from './auth.guard';
+import { MailerService } from '@nestjs-modules/mailer';
+import { hashSync } from 'bcrypt';
 
 @Controller()
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
+    private readonly mailerService: MailerService,
   ) {}
 
   @Get('me')
@@ -187,11 +190,28 @@ export class AuthController {
     @Body() body: RequestChangePasswordDto,
   ): Promise<string> {
     try {
-      const message = await this.authService.requestChangePassword(
+      const request = await this.authService.requestChangePassword(
         body.email,
         body.newPassword,
       );
-      return message;
+      if (!request) {
+        throw new Errors(400, ['Change password request failed']);
+      }
+      const hashedId = hashSync(request.id?.toString() ?? '', 10);
+      await this.mailerService.sendMail({
+        to: body.email,
+        subject: 'Change Password Request',
+        template: 'change-password',
+        context: {
+          resetLink:
+            (process.env.BASE_URL || 'http://localhost:3000/api') +
+            '/confirm-change-password/' +
+            encodeURIComponent(hashedId) +
+            '?email=' +
+            encodeURIComponent(body.email),
+        },
+      });
+      return `Change password request sent to ${body.email}`;
     } catch (error) {
       if (error instanceof Errors) {
         throw new HttpException(error, error.status || 500);
@@ -215,7 +235,10 @@ export class AuthController {
     @Query('email') email: string,
   ): Promise<string> {
     try {
-      const result = await this.authService.confirmChangePassword(email, hashedIdParam);
+      const result = await this.authService.confirmChangePassword(
+        email,
+        hashedIdParam,
+      );
       return result;
     } catch (error) {
       if (error instanceof Errors) {

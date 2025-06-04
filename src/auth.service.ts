@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IRepository, REPOSITORY } from './repository/repository.interface';
-import { Errors, User } from './auth.model';
+import { ChangePasswordRequest, Errors, User } from './auth.model';
 
 @Injectable()
 export class AuthService {
@@ -46,7 +46,7 @@ export class AuthService {
     });
   }
 
-  requestChangePassword(email: string, newPassword: string): Promise<string> {
+  requestChangePassword(email: string, newPassword: string): Promise<ChangePasswordRequest> {
     return this.repository
       .getByEmail(email)
       .then((user) => {
@@ -61,12 +61,6 @@ export class AuthService {
         }
         return this.repository.requestChangePassword(email, newPassword);
       })
-      .then((request) => {
-        return this.repository.sendConfirmationEmail(email, request);
-      })
-      .then(() => {
-        return `Change password request for ${email} processed successfully`;
-      });
   }
 
   confirmChangePassword(email: string, hashedId: string): Promise<string> {
