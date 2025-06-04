@@ -5,9 +5,11 @@ import {
   Headers,
   HttpCode,
   HttpException,
+  Param,
   Patch,
   Post,
   Put,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -22,6 +24,7 @@ import {
   RefreshResponse,
   RegisterDto,
   RegisterResponse,
+  RequestChangePasswordDto,
   UserWithoutPassword,
   ValidateResponse,
 } from './auth.model';
@@ -161,6 +164,59 @@ export class AuthController {
       const userId = req.user.sub;
       await this.authService.changePassword(userId, body.newPassword);
       return `Password for user ID ${userId} changed successfully`;
+    } catch (error) {
+      if (error instanceof Errors) {
+        throw new HttpException(error, error.status || 500);
+      } else {
+        throw new HttpException(
+          { status: 500, message: 'Internal Server Error: ' + error.message },
+          500,
+        );
+      }
+    }
+  }
+
+  @Post('request-change-password')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    description:
+      'Returns a success message upon successful change password request',
+  })
+  async requestChangePassword(
+    @Body() body: RequestChangePasswordDto,
+  ): Promise<string> {
+    try {
+      const message = await this.authService.requestChangePassword(
+        body.email,
+        body.newPassword,
+      );
+      return message;
+    } catch (error) {
+      if (error instanceof Errors) {
+        throw new HttpException(error, error.status || 500);
+      } else {
+        throw new HttpException(
+          { status: 500, message: 'Internal Server Error: ' + error.message },
+          500,
+        );
+      }
+    }
+  }
+
+  @Get('confirm-change-password/:hashedId')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    description: 'Returns a success message upon successful password change',
+  })
+  async changePasswordWithHashedId(
+    @Param('hashedId') hashedIdParam: string,
+    @Query('email') email: string,
+  ): Promise<string> {
+    try {
+      const result = await this.authService.confirmChangePassword(email, hashedIdParam);
+      return result;
     } catch (error) {
       if (error instanceof Errors) {
         throw new HttpException(error, error.status || 500);

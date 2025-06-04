@@ -46,6 +46,63 @@ export class AuthService {
     });
   }
 
+  requestChangePassword(email: string, newPassword: string): Promise<string> {
+    return this.repository
+      .getByEmail(email)
+      .then((user) => {
+        if (!user) {
+          throw new Errors(404, ['User not found']);
+        }
+      })
+      .then(() => this.repository.getRequestChangePassword(email))
+      .then((request) => {
+        if (request) {
+          throw new Errors(400, ['Change password request already exists']);
+        }
+        return this.repository.requestChangePassword(email, newPassword);
+      })
+      .then((request) => {
+        return this.repository.sendConfirmationEmail(email, request);
+      })
+      .then(() => {
+        return `Change password request for ${email} processed successfully`;
+      });
+  }
+
+  confirmChangePassword(email: string, hashedId: string): Promise<string> {
+    return this.repository
+      .getRequestChangePassword(email)
+      .then(async (request) => {
+        if (!request) {
+          throw new Errors(404, ['Change password request not found']);
+        }
+        const isValid = await this.repository.validateChangePassword(
+          hashedId,
+          request,
+        );
+        if (!isValid) {
+          throw new Errors(400, ['Invalid change password request']);
+        }
+
+        const user = await this.repository.getByEmail(email);
+        if (!user) {
+          throw new Errors(404, ['User not found']);
+        }
+
+        return this.repository.changePassword(
+          user.id ?? '',
+          request.password,
+          true,
+        );
+      })
+      .then(() => {
+        return this.repository.deleteRequestChangePassword(email);
+      })
+      .then(() => {
+        return `Password for ${email} changed successfully`;
+      });
+  }
+
   changePassword(userId: string, newPassword: string): Promise<string> {
     return this.repository
       .getById(userId)

@@ -8,6 +8,13 @@ export class User {
   password: string;
 }
 
+export class ChangePasswordRequest {
+  id?: string;
+  email: string;
+  password: string;
+  createdAt?: Date;
+}
+
 export class LoginDto {
   @IsString()
   @ApiProperty({
@@ -45,6 +52,21 @@ export class RegisterDto {
 }
 
 export class ChangePasswordDto {
+  @IsString()
+  @ApiProperty({
+    description: 'New password for the user',
+    example: 'newsecurepassword456',
+  })
+  newPassword: string;
+}
+
+export class RequestChangePasswordDto {
+  @IsString()
+  @ApiProperty({
+    description: 'Email for requesting password change',
+    example: 'johndoe@mail.com'
+  })
+  email: string;
   @IsString()
   @ApiProperty({
     description: 'New password for the user',
@@ -117,12 +139,18 @@ export class UserWithoutPassword {
   id: string;
   @ApiResponseProperty({
     type: String,
+    example: 'johndoe@mail.com',
+  })
+  email: string;
+  @ApiResponseProperty({
+    type: String,
     example: 'john_doe',
   })
   username: string;
   public static from(user: User): UserWithoutPassword {
     return {
       id: user.id ?? '',
+      email: user.email,
       username: user.username,
     };
   }
