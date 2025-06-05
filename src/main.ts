@@ -21,7 +21,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: '*', // Allow all origins
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Allow all HTTP methods
     allowedHeaders: 'Content-Type, Authorization',
   });
   app.setGlobalPrefix(process.env.TOP_LEVEL_PREFIX || 'api'); // Set global prefix for all routes
