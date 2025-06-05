@@ -19,11 +19,7 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup((process.env.TOP_LEVEL_PREFIX || '') + '/documentation', app, documentFactory);
 
-  app.enableCors({
-    origin: '*', // Allow all origins
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Allow all HTTP methods
-    allowedHeaders: 'Content-Type, Authorization',
-  });
+  app.enableCors();
   app.setGlobalPrefix(process.env.TOP_LEVEL_PREFIX || 'api'); // Set global prefix for all routes
   app.useGlobalPipes(
     new ValidationPipe({
